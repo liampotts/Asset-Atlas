@@ -22,7 +22,10 @@
 <script>
 $(document).ready(function() {
     $('#properties').DataTable({
-        ajax: '/api/properties',
+        ajax: {
+            url: '/api/properties',
+            dataSrc: ''
+        },
         columns: [
             { data: 'name' },
             { data: 'Address' },

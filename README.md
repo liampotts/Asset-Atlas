@@ -76,4 +76,6 @@ python webapp/app.py
 
 Navigate to <http://localhost:5000/> to see a filterable table showing
 property name, address, construction date, and whether the building is
-owned or leased.
+owned or leased.  The interface now uses Bootstrap and DataTables for a
+modern look with sorting and paging controls.  A navigation bar at the
+top provides links to future dashboard pages.

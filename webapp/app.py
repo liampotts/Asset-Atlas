@@ -33,6 +33,8 @@ _df = _df.rename(columns={
     'Construction Date': 'construction_date',
     'Owned or Leased': 'owned_or_leased'
 })
+# Convert numeric construction_date values to strings for JSON serialization
+_df['construction_date'] = _df['construction_date'].apply(lambda x: str(int(x)) if pd.notnull(x) else '')
 
 @app.route('/')
 def properties_page():

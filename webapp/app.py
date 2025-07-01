@@ -16,7 +16,12 @@ _df = pd.read_excel(
         'City',
         'State',
         'Construction Date',
-        'Owned or Leased'
+        'Owned or Leased',
+        'Latitude',
+        'Longitude',
+        'Building Status',
+        'Real Property Asset Type',
+        'Congressional District Representative Name'
     ]
 )
 
@@ -31,7 +36,12 @@ _df['Address'] = (
 _df = _df.rename(columns={
     'Real Property Asset Name': 'name',
     'Construction Date': 'construction_date',
-    'Owned or Leased': 'owned_or_leased'
+    'Owned or Leased': 'owned_or_leased',
+    'Latitude': 'lat',
+    'Longitude': 'lon',
+    'Building Status': 'building_status',
+    'Real Property Asset Type': 'asset_type',
+    'Congressional District Representative Name': 'representative'
 })
 
 _df['construction_date'] = _df['construction_date'].apply(lambda x: str(int(x)) if pd.notnull(x) else '')
@@ -64,6 +74,23 @@ def owned_construction_dates():
         if year
     ]
     return jsonify(data)
+
+
+@app.route('/api/owned_map_data')
+def owned_map_data():
+    """Return location data for owned properties."""
+    owned = _df[_df['owned_or_leased'] == 'F']
+    records = []
+    for _, row in owned.iterrows():
+        if pd.notnull(row['lat']) and pd.notnull(row['lon']):
+            records.append({
+                'lat': float(row['lat']),
+                'lon': float(row['lon']),
+                'status': row.get('building_status', ''),
+                'asset_type': row.get('asset_type', ''),
+                'representative': row.get('representative', '')
+            })
+    return jsonify(records)
 
 if __name__ == '__main__':
     app.run(debug=True)

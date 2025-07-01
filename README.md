@@ -62,3 +62,20 @@ cleaned = re.sub(r'\s+', ' ', cleaned)
 
 Because addresses vary in format (for example `AVENUE` vs `AVE`), the
 result is not perfect but it captures many cases.
+
+## Simple web interface
+
+The `webapp` directory contains a small Flask application that loads the
+building spreadsheet and exposes a page to explore the data.  Install
+the dependencies listed in `requirements.txt` and run `webapp/app.py`:
+
+```bash
+pip install -r requirements.txt
+python webapp/app.py
+```
+
+Navigate to <http://localhost:5000/> to see a filterable table showing
+property name, address, construction date, and whether the building is
+owned or leased.  The interface now uses Bootstrap and DataTables for a
+modern look with sorting and paging controls.  A navigation bar at the
+top provides links to future dashboard pages.

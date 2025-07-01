@@ -46,5 +46,24 @@ def properties_api():
     """Return the dataset as JSON for DataTables."""
     return jsonify(_df[['name', 'Address', 'construction_date', 'owned_or_leased']].to_dict(orient='records'))
 
+
+@app.route('/owned')
+def owned_dashboard():
+    """Render dashboard for owned properties."""
+    return render_template('owned_dashboard.html')
+
+
+@app.route('/api/owned_construction_dates')
+def owned_construction_dates():
+    """Return counts of owned buildings by construction year."""
+    owned = _df[_df['owned_or_leased'] == 'F']
+    counts = owned['construction_date'].value_counts().sort_index()
+    data = [
+        {'year': year, 'count': int(count)}
+        for year, count in counts.items()
+        if year
+    ]
+    return jsonify(data)
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -34,6 +34,8 @@ _df = _df.rename(columns={
     'Owned or Leased': 'owned_or_leased'
 })
 
+_df['construction_date'] = _df['construction_date'].apply(lambda x: str(int(x)) if pd.notnull(x) else '')
+
 @app.route('/')
 def properties_page():
     """Render the table page."""

@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 import logging
 import gzip
-import time
+from time import perf_counter
 
 app = Flask(__name__)
 
@@ -100,13 +100,18 @@ def properties_api():
 @app.route('/api/leases')
 def leases_api():
     """Return leased property data for the dashboard."""
-    start = time.time()
+    start = perf_counter()
     resp = app.response_class(
         _leases_json_gz,
         mimetype='application/json',
         headers={'Content-Encoding': 'gzip'}
     )
-    logger.info("/api/leases served in %.2f ms", (time.time() - start) * 1000)
+    elapsed_ms = (perf_counter() - start) * 1000
+    logger.info(
+        "/api/leases served %d records in %.2f ms",
+        len(_leases_records),
+        elapsed_ms,
+    )
     return resp
 
 

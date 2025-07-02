@@ -91,7 +91,8 @@ $(function() {
                 { data: 'lease_start' },
                 { data: 'lease_end' }
             ],
-            pageLength: 25
+            pageLength: 25,
+            deferRender: true
         });
 
         var items = data.map(function(row, idx) {

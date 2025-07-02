@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+import json
 import pandas as pd
 from pathlib import Path
 
@@ -6,6 +7,7 @@ app = Flask(__name__)
 
 # Determine the path to the Excel file relative to this file
 DATA_PATH = Path(__file__).resolve().parent.parent / '2025-6-20-iolp-buildings.xlsx'
+LEASE_DATA_PATH = Path(__file__).resolve().parent.parent / '2025-6-20-iolp-leases.xlsx'
 
 # Load a subset of the building dataset with relevant fields
 _df = pd.read_excel(
@@ -24,6 +26,36 @@ _df = pd.read_excel(
         'Congressional District Representative Name'
     ]
 )
+
+# Load leased property data with relevant fields and parse dates
+_leases_df = pd.read_excel(
+    LEASE_DATA_PATH,
+    usecols=[
+        'Real Property Asset Name',
+        'City',
+        'State',
+        'Lease Effective Date',
+        'Lease Expiration Date'
+    ],
+    parse_dates=['Lease Effective Date', 'Lease Expiration Date']
+)
+
+# Rename columns for cleaner JSON keys
+_leases_df = _leases_df.rename(columns={
+    'Real Property Asset Name': 'name',
+    'City': 'city',
+    'State': 'state',
+    'Lease Effective Date': 'lease_start',
+    'Lease Expiration Date': 'lease_end'
+})
+
+# Format dates as ISO strings for the web app
+_leases_df['lease_start'] = _leases_df['lease_start'].dt.strftime('%Y-%m-%d')
+_leases_df['lease_end'] = _leases_df['lease_end'].dt.strftime('%Y-%m-%d')
+
+# cache the JSON for faster /api/leases responses
+_leases_records = _leases_df.to_dict(orient='records')
+_leases_json = json.dumps(_leases_records)
 
 # Combine address fields into a single column
 _df['Address'] = (
@@ -57,10 +89,22 @@ def properties_api():
     return jsonify(_df[['name', 'Address', 'construction_date', 'owned_or_leased']].to_dict(orient='records'))
 
 
+@app.route('/api/leases')
+def leases_api():
+    """Return leased property data for the dashboard."""
+    return app.response_class(_leases_json, mimetype='application/json')
+
+
 @app.route('/owned')
 def owned_dashboard():
     """Render dashboard for owned properties."""
     return render_template('owned_dashboard.html')
+
+
+@app.route('/leased')
+def leased_dashboard():
+    """Render dashboard for leased properties."""
+    return render_template('leased_dashboard.html')
 
 
 @app.route('/api/owned_construction_dates')

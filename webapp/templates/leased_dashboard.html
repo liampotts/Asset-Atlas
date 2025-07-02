@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Leased Properties Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link href="https://unpkg.com/vis-timeline@7.7.0/dist/vis-timeline-graph2d.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/vis-timeline@7.7.0/dist/vis-timeline-graph2d.min.js"></script>
+    <style>
+      /* make the main dashboard container scrollable within the viewport */
+      .dashboard-scroll {
+        height: calc(100vh - 4rem);
+        overflow-y: auto;
+      }
+      /* wrapper for timeline scroll + sticky axis container */
+      #timeline-wrapper {
+        position: relative;
+      }
+      /* constrain the timeline rows and enable internal scroll */
+      #timeline-scroll {
+        height: 40vh;
+        overflow-y: auto;
+      }
+      /* style for the moved bottom axis panel */
+      #timeline-sticky-axis .vis-panel.vis-bottom {
+        background: #fff;
+        z-index: 2;
+      }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Asset Atlas</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="/">Properties</a></li>
+        <li class="nav-item"><a class="nav-link disabled" href="#">Map</a></li>
+        <li class="nav-item"><a class="nav-link" href="/owned">Owned Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link active" aria-current="page" href="/leased">Leased Dashboard</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container dashboard-scroll">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h1 class="card-title mb-4">Lease Terms</h1>
+      <div id="timeline-wrapper">
+        <div id="timeline-scroll">
+          <div id="timeline"></div>
+        </div>
+        <div id="timeline-sticky-axis"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h1 class="card-title mb-4">Leased Properties</h1>
+      <table id="leaseTable" class="table table-striped" style="width:100%">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Lease Start</th>
+            <th>Lease End</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+$(function() {
+    $.getJSON('/api/leases', function(data) {
+        $('#leaseTable').DataTable({
+            data: data,
+            columns: [
+                { data: 'name' },
+                { data: 'city' },
+                { data: 'state' },
+                { data: 'lease_start' },
+                { data: 'lease_end' }
+            ],
+            pageLength: 25
+        });
+
+        var items = data.map(function(row, idx) {
+            return {
+                id: idx,
+                content: '',
+                start: row.lease_start,
+                end: row.lease_end,
+                title: row.name
+            };
+        });
+        var container = document.getElementById('timeline');
+
+        var allDates = [];
+        data.forEach(function(row) {
+            allDates.push(new Date(row.lease_start));
+            allDates.push(new Date(row.lease_end));
+        });
+        var minDate = new Date(Math.min.apply(null, allDates));
+        var maxDate = new Date(Math.max.apply(null, allDates));
+        var span = maxDate - minDate;
+
+        var options = {
+            stack: true,
+            editable: { updateTime: false },
+            min: minDate,
+            max: maxDate,
+            zoomMin: 1000 * 60 * 60 * 24,
+            zoomMax: span
+        };
+
+        var timeline = new vis.Timeline(container, items, options);
+        if (typeof timeline.off === 'function') {
+          timeline.off('mousewheel');
+          timeline.off('DOMMouseScroll');
+        }
+        // move the bottom axis panel out of the scroll area so it's always visible
+        var axisPanel = container.querySelector('.vis-panel.vis-bottom');
+        if (axisPanel) {
+          var sticky = document.getElementById('timeline-sticky-axis');
+          sticky.appendChild(axisPanel);
+          axisPanel.style.position = 'static';
+        }
+    });
+});
+</script>
+</body>
+</html>

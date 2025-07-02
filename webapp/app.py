@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+import json
 import pandas as pd
 from pathlib import Path
 
@@ -52,6 +53,10 @@ _leases_df = _leases_df.rename(columns={
 _leases_df['lease_start'] = _leases_df['lease_start'].dt.strftime('%Y-%m-%d')
 _leases_df['lease_end'] = _leases_df['lease_end'].dt.strftime('%Y-%m-%d')
 
+# cache the JSON for faster /api/leases responses
+_leases_records = _leases_df.to_dict(orient='records')
+_leases_json = json.dumps(_leases_records)
+
 # Combine address fields into a single column
 _df['Address'] = (
     _df['Street Address'].fillna('') + ', ' +
@@ -87,7 +92,7 @@ def properties_api():
 @app.route('/api/leases')
 def leases_api():
     """Return leased property data for the dashboard."""
-    return jsonify(_leases_df.to_dict(orient='records'))
+    return app.response_class(_leases_json, mimetype='application/json')
 
 
 @app.route('/owned')

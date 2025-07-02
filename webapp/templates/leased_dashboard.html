@@ -11,6 +11,27 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://unpkg.com/vis-timeline@7.7.0/dist/vis-timeline-graph2d.min.js"></script>
+    <style>
+      /* make the main dashboard container scrollable within the viewport */
+      .dashboard-scroll {
+        height: calc(100vh - 4rem);
+        overflow-y: auto;
+      }
+      /* wrapper for timeline scroll + sticky axis container */
+      #timeline-wrapper {
+        position: relative;
+      }
+      /* constrain the timeline rows and enable internal scroll */
+      #timeline-scroll {
+        height: 40vh;
+        overflow-y: auto;
+      }
+      /* style for the moved bottom axis panel */
+      #timeline-sticky-axis .vis-panel.vis-bottom {
+        background: #fff;
+        z-index: 2;
+      }
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
@@ -29,11 +50,16 @@
     </div>
   </div>
 </nav>
-<div class="container">
+<div class="container dashboard-scroll">
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <h1 class="card-title mb-4">Lease Terms</h1>
-      <div id="timeline"></div>
+      <div id="timeline-wrapper">
+        <div id="timeline-scroll">
+          <div id="timeline"></div>
+        </div>
+        <div id="timeline-sticky-axis"></div>
+      </div>
     </div>
   </div>
   <div class="card shadow-sm">
@@ -78,7 +104,37 @@ $(function() {
             };
         });
         var container = document.getElementById('timeline');
-        var timeline = new vis.Timeline(container, items, { stack: false });
+
+        var allDates = [];
+        data.forEach(function(row) {
+            allDates.push(new Date(row.lease_start));
+            allDates.push(new Date(row.lease_end));
+        });
+        var minDate = new Date(Math.min.apply(null, allDates));
+        var maxDate = new Date(Math.max.apply(null, allDates));
+        var span = maxDate - minDate;
+
+        var options = {
+            stack: true,
+            editable: { updateTime: false },
+            min: minDate,
+            max: maxDate,
+            zoomMin: 1000 * 60 * 60 * 24,
+            zoomMax: span
+        };
+
+        var timeline = new vis.Timeline(container, items, options);
+        if (typeof timeline.off === 'function') {
+          timeline.off('mousewheel');
+          timeline.off('DOMMouseScroll');
+        }
+        // move the bottom axis panel out of the scroll area so it's always visible
+        var axisPanel = container.querySelector('.vis-panel.vis-bottom');
+        if (axisPanel) {
+          var sticky = document.getElementById('timeline-sticky-axis');
+          sticky.appendChild(axisPanel);
+          axisPanel.style.position = 'static';
+        }
     });
 });
 </script>

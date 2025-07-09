@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+import os
 import json
 import pandas as pd
 from pathlib import Path
@@ -107,6 +108,13 @@ def leased_dashboard():
     return render_template('leased_dashboard.html')
 
 
+@app.route('/map')
+def map_page():
+    """Render interactive map with Google Maps API."""
+    api_key = os.environ.get('GOOGLE_MAPS_API_KEY', '')
+    return render_template('map.html', api_key=api_key)
+
+
 @app.route('/api/owned_construction_dates')
 def owned_construction_dates():
     """Return counts of owned buildings by construction year."""
@@ -134,6 +142,24 @@ def owned_map_data():
                 'asset_type': row.get('asset_type', ''),
                 'representative': row.get('representative', '')
             })
+    return jsonify(records)
+
+
+@app.route('/api/map_data')
+def map_data():
+    """Return location data for all properties within the continental US."""
+    records = []
+    for _, row in _df.iterrows():
+        if pd.notnull(row['lat']) and pd.notnull(row['lon']):
+            lat = float(row['lat'])
+            lon = float(row['lon'])
+            if 24 <= lat <= 49 and -125 <= lon <= -66:
+                records.append({
+                    'name': row['name'],
+                    'address': row['Address'],
+                    'lat': lat,
+                    'lon': lon
+                })
     return jsonify(records)
 
 if __name__ == '__main__':

@@ -80,4 +80,7 @@ owned or leased.  The interface now uses Bootstrap and DataTables for a
 modern look with sorting and paging controls.  A navigation bar at the
 top provides links to an **Owned Dashboard** and a new **Leased Dashboard**
 showing lease terms as an interactive Gantt chart alongside a table of
-leases.
+leases. A **Map** link displays all properties on a Google map with clickable
+markers. Clicking a marker opens a Street View panorama when available. Set a
+`GOOGLE_MAPS_API_KEY` environment variable before running the app to enable the
+Google Maps functionality.

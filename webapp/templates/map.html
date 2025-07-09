@@ -10,7 +10,8 @@
       #map { height: 500px; }
       /* Avoid inverted colors in Street View caused by dark-mode filters */
       #pano {
-        filter: none !important;
+        /* Cancel dark mode filters so Street View colors render normally */
+        filter: invert(100%) hue-rotate(180deg) !important;
       }
     </style>
 </head>

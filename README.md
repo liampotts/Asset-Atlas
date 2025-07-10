@@ -48,24 +48,45 @@ creates `asset_atlas.db`, a SQLite database with the following tables:
   cleaned asset name.
 - **leases** – lease information for properties that are leased.
 
-+-------------------+      +-------------------+      +---------------------+
-|    addresses      |      |    properties     |      |       leases        |
-+-------------------+      +-------------------+      +---------------------+
-| id (PK)           |<-----| id (PK)           |      | id (PK)             |
-| street_address    |      | location_code     |      | property_id (FK)    |
-| city              |      | asset_name        |      | federal_leased_code |
-| state             |      | clean_asset_name  |      | lease_number        |
-| zip_code          |      | installation_name |      | lease_effective_date|
-| latitude          |      | owned_or_leased   |      | lease_expiration_date|
-| longitude         |      | gsa_region        |      +---------------------+
-| congressional_... |      | address_id (FK)---+           
-| congressional_... |      | rentable_sqft     |            
-+-------------------+      | available_sqft    |           
-                           | construction_date |           
-                           | building_status   |            
-                           | asset_type        |            
-                           +-------------------+            
-
+```mermaid
+erDiagram
+    addresses {
+        int id PK
+        string street_address
+        string city
+        string state
+        string zip_code
+        float latitude
+        float longitude
+        string congressional_district
+        string congressional_rep
+    }
+    properties {
+        int id PK
+        string location_code
+        string asset_name
+        string clean_asset_name
+        string installation_name
+        string owned_or_leased
+        string gsa_region
+        int address_id FK
+        int rentable_sqft
+        int available_sqft
+        string construction_date
+        string building_status
+        string asset_type
+    }
+    leases {
+        int id PK
+        int property_id FK
+        string federal_leased_code
+        string lease_number
+        date lease_effective_date
+        date lease_expiration_date
+    }
+    addresses ||--o{ properties : "address_id"
+    properties ||--o{ leases : "property_id"
+```
 
 ## Cleaning building names
 

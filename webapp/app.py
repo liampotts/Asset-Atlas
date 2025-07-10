@@ -3,8 +3,15 @@ import os
 import json
 import pandas as pd
 from pathlib import Path
+import logging
+import gzip
+from time import perf_counter
 
 app = Flask(__name__)
+
+# basic request logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Determine the path to the Excel file relative to this file
 DATA_PATH = Path(__file__).resolve().parent.parent / '2025-6-20-iolp-buildings.xlsx'
@@ -57,6 +64,7 @@ _leases_df['lease_end'] = _leases_df['lease_end'].dt.strftime('%Y-%m-%d')
 # cache the JSON for faster /api/leases responses
 _leases_records = _leases_df.to_dict(orient='records')
 _leases_json = json.dumps(_leases_records)
+_leases_json_gz = gzip.compress(_leases_json.encode('utf-8'))
 
 # Combine address fields into a single column
 _df['Address'] = (
@@ -93,7 +101,19 @@ def properties_api():
 @app.route('/api/leases')
 def leases_api():
     """Return leased property data for the dashboard."""
-    return app.response_class(_leases_json, mimetype='application/json')
+    start = perf_counter()
+    resp = app.response_class(
+        _leases_json_gz,
+        mimetype='application/json',
+        headers={'Content-Encoding': 'gzip'}
+    )
+    elapsed_ms = (perf_counter() - start) * 1000
+    logger.info(
+        "/api/leases served %d records in %.2f ms",
+        len(_leases_records),
+        elapsed_ms,
+    )
+    return resp
 
 
 @app.route('/owned')
@@ -105,6 +125,7 @@ def owned_dashboard():
 @app.route('/leased')
 def leased_dashboard():
     """Render dashboard for leased properties."""
+    logger.info("Rendering leased_dashboard")
     return render_template('leased_dashboard.html')
 
 

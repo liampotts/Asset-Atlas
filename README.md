@@ -48,6 +48,25 @@ creates `asset_atlas.db`, a SQLite database with the following tables:
   cleaned asset name.
 - **leases** – lease information for properties that are leased.
 
++-------------------+      +-------------------+      +---------------------+
+|    addresses      |      |    properties     |      |       leases        |
++-------------------+      +-------------------+      +---------------------+
+| id (PK)           |<-----| id (PK)           |      | id (PK)             |
+| street_address    |      | location_code     |      | property_id (FK)    |
+| city              |      | asset_name        |      | federal_leased_code |
+| state             |      | clean_asset_name  |      | lease_number        |
+| zip_code          |      | installation_name |      | lease_effective_date|
+| latitude          |      | owned_or_leased   |      | lease_expiration_date|
+| longitude         |      | gsa_region        |      +---------------------+
+| congressional_... |      | address_id (FK)---+           
+| congressional_... |      | rentable_sqft     |            
++-------------------+      | available_sqft    |           
+                           | construction_date |           
+                           | building_status   |            
+                           | asset_type        |            
+                           +-------------------+            
+
+
 ## Cleaning building names
 
 Building names sometimes contain the address.  The script attempts to
